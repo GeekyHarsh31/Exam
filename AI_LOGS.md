@@ -388,3 +388,85 @@ If AntiGravity is creating a single root or monorepo structure, you can save thi
 }
 
 ```
+
+
+Implementation Plan - University AV Room Equipment Lending & Inventory System
+Build, configure, test, and prepare for deployment a full-stack Equipment Lending & Inventory System for a university AV room according to domain specifications and business logic rules.
+
+Core Features & Architecture
+Database Schema & Models (Prisma ORM)
+
+User, AssetCategory, PhysicalAsset, Reservation, LoanTransaction, LedgerTransaction models.
+Enums: Role, AccountStatus, AssetStatus, ReservationStatus, PaymentType.
+SQLite for rapid local dev/testing + PostgreSQL support for production containerized deployment via Docker.
+Backend Domain Logic & API (Node.js / Express / TypeScript)
+
+GET /api/assets: Asset listing with category info and current status.
+POST /api/reservations: Reservation creation with user status check, category borrow limit check, asset maintenance check, and 1-hour buffer overlap check (startTime - 1hr to endTime + 1hr).
+POST /api/loans/:id/checkout: Desk check-out transforming PENDING reservation into ACTIVE loan and recording DEPOSIT_HELD.
+POST /api/loans/:id/return: Calculates operating hours late fees (Mon-Fri 8 AM - 6 PM only, weekend/overnight excluded, capped at deposit), records LATE_FEE_DEDUCTED and DEPOSIT_REFUNDED ledger entries, marks asset AVAILABLE and reservation COMPLETED.
+POST /api/cron/cleanup-noshows: Automatically marks PENDING reservations past 45 minutes of startTime as NO_SHOW and frees up inventory.
+Concurrency Control: Database-level serializable transactions and row-level locking checks to eliminate double bookings.
+Frontend Application (React + Vite + Tailwind CSS)
+
+Equipment Browser: Search, filter by category, view barcodes, serial numbers, deposit amounts, and real-time asset availability.
+Booking Panel: Interactive booking with date/time pickers, visual feedback on category limits, 1-hour buffer warnings, and operational hours notices.
+Desk Admin View: Checkout flow, return processing modal with live fee calculations, condition notes, ledger history, and manual trigger for No-Show Cleanup.
+Automated Test Suite (Jest / Vitest)
+
+Concurrency Test: Simultaneous requests for the same physical asset reject overlapping slots.
+Operating Hours Late Fee Test: Verifies exact calculation during Mon-Fri 8 AM - 6 PM operating hours (e.g. Fri 5 PM due to Mon 9 AM return).
+Category Limit Test: Enforces max borrow limit across active loans and future reservations (rejects 3rd item when limit is 2).
+User Review Required
+IMPORTANT
+
+Database: Dual configuration will be provided (Prisma with SQLite for local quick dev/test and PostgreSQL for Docker production).
+Late Fee Rate: category.lateFeePerDay will be converted to an hourly rate during the 10 operating hours (8:00 AM to 6:00 PM) per weekday.
+Proposed Changes
+Backend Component (backend/)
+[NEW] 
+package.json
+Setup dependencies: express, @prisma/client, cors, dotenv, zod, ts-node, typescript, jest, supertest, ts-jest.
+[NEW] 
+prisma/schema.prisma
+Prisma schema containing all enums and models specified in prompt requirement #2.
+[NEW] 
+src/utils/operatingHours.ts
+Operating hours late fee calculation algorithm:
+Counts elapsed minutes/hours strictly within Mon-Fri 08:00 - 18:00.
+Excludes Saturdays, Sundays, and non-operational hours.
+Multiplies by hourly late fee (lateFeePerDay / 10.0).
+Caps total late fee at depositAmount.
+[NEW] 
+src/services/lendingService.ts
+Transactional domain service for reservation creation, overlap checking (+1hr buffer), concurrency locking, loan checkout, return calculation, and no-show cleanup.
+[NEW] 
+src/routes/api.ts
+ & 
+src/app.ts
+Express API server setup and endpoint routing.
+[NEW] 
+tests/lending.test.ts
+Automated tests verifying concurrency, operating hours late fees, and category borrow limits.
+Frontend Component (frontend/)
+[NEW] 
+package.json
+ & 
+vite.config.ts
+React + Vite + Tailwind CSS configuration.
+[NEW] 
+src/App.tsx
+Modern dashboard with tabs for Equipment Browser, Booking Panel, and Desk Admin View.
+Deployment & Orchestration
+[NEW] 
+docker-compose.yml
+ & 
+Dockerfile
+Production-ready Docker containerization setup with PostgreSQL DB, backend service, and frontend static build.
+Verification Plan
+Automated Tests
+Run npm test inside backend/ to execute Jest test suite for concurrency, late fees, and category limits.
+Manual Verification
+Launch backend and frontend servers locally.
+Test browsing equipment, creating reservations, checking out, and returning gear with late fee breakdown in UI.
+Test cleanup-noshows endpoint.
