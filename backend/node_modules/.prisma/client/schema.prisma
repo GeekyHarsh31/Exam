@@ -1,0 +1,82 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id           String            @id @default(uuid())
+  name         String
+  email        String            @unique
+  role         String            @default("STUDENT")
+  status       String            @default("ACTIVE")
+  reservations Reservation[]
+  loans        LoanTransaction[]
+  createdAt    DateTime          @default(now())
+}
+
+model AssetCategory {
+  id              String          @id @default(uuid())
+  name            String          @unique
+  description     String?
+  maxBorrowLimit  Int             @default(2)
+  depositRequired Float           @default(50.0)
+  lateFeePerDay   Float           @default(10.0)
+  assets          PhysicalAsset[]
+}
+
+model PhysicalAsset {
+  id             String            @id @default(uuid())
+  barcode        String            @unique
+  categoryId     String
+  category       AssetCategory     @relation(fields: [categoryId], references: [id])
+  serialNumber   String            @unique
+  model          String
+  status         String            @default("AVAILABLE")
+  conditionNotes String?
+  reservations   Reservation[]
+  loans          LoanTransaction[]
+}
+
+model Reservation {
+  id        String           @id @default(uuid())
+  userId    String
+  user      User             @relation(fields: [userId], references: [id])
+  assetId   String
+  asset     PhysicalAsset    @relation(fields: [assetId], references: [id])
+  startTime DateTime
+  endTime   DateTime
+  status    String           @default("PENDING")
+  loan      LoanTransaction?
+  createdAt DateTime         @default(now())
+}
+
+model LoanTransaction {
+  id                      String              @id @default(uuid())
+  reservationId           String?             @unique
+  reservation             Reservation?        @relation(fields: [reservationId], references: [id])
+  assetId                 String
+  asset                   PhysicalAsset       @relation(fields: [assetId], references: [id])
+  userId                  String
+  user                    User                @relation(fields: [userId], references: [id])
+  checkoutTime            DateTime            @default(now())
+  expectedReturnTime      DateTime
+  actualReturnTime        DateTime?
+  depositAmount           Float
+  lateFeeAccrued          Float               @default(0.0)
+  inspectionNotesCheckout String?
+  inspectionNotesReturn   String?
+  payments                LedgerTransaction[]
+}
+
+model LedgerTransaction {
+  id        String          @id @default(uuid())
+  loanId    String
+  loan      LoanTransaction @relation(fields: [loanId], references: [id])
+  amount    Float
+  type      String
+  createdAt DateTime        @default(now())
+}

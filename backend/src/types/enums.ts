@@ -1,0 +1,32 @@
+export enum Role {
+  STUDENT = 'STUDENT',
+  FACULTY = 'FACULTY',
+  ADMIN = 'ADMIN',
+}
+
+export enum AccountStatus {
+  ACTIVE = 'ACTIVE',
+  BLOCKED = 'BLOCKED',
+}
+
+export enum AssetStatus {
+  AVAILABLE = 'AVAILABLE',
+  RESERVED = 'RESERVED',
+  CHECKED_OUT = 'CHECKED_OUT',
+  IN_MAINTENANCE = 'IN_MAINTENANCE',
+  LOST = 'LOST',
+}
+
+export enum ReservationStatus {
+  PENDING = 'PENDING',
+  ACTIVE = 'ACTIVE',
+  COMPLETED = 'COMPLETED',
+  CANCELLED = 'CANCELLED',
+  NO_SHOW = 'NO_SHOW',
+}
+
+export enum PaymentType {
+  DEPOSIT_HELD = 'DEPOSIT_HELD',
+  LATE_FEE_DEDUCTED = 'LATE_FEE_DEDUCTED',
+  DEPOSIT_REFUNDED = 'DEPOSIT_REFUNDED',
+}

@@ -1,0 +1,29 @@
+{
+  "name": "AV Equipment Lending System (GitHub Codespaces)",
+  "image": "mcr.microsoft.com/devcontainers/typescript-node:1-20-bullseye",
+
+  "forwardPorts": [3000, 5000],
+
+  "portsAttributes": {
+    "3000": {
+      "label": "Frontend Dashboard (React)",
+      "onAutoForward": "openBrowser"
+    },
+    "5000": {
+      "label": "Backend API (Express)",
+      "onAutoForward": "notify"
+    }
+  },
+
+  "postCreateCommand": "npm run setup",
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "Prisma.prisma",
+        "bradlc.vscode-tailwindcss",
+        "dbaeumer.vscode-eslint"
+      ]
+    }
+  }
+}
